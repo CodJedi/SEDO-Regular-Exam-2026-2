@@ -2,24 +2,30 @@ pipeline {
     agent any
 
     stages {
-        stage('Build and Test on main') {
+        stage('Restore dependencies') {
             when {
                 branch 'main'
             }
             steps {
-                sh 'dotnet --info'
                 sh 'dotnet restore'
-                sh 'dotnet build --configuration Release --no-restore'
-                sh 'dotnet test --configuration Release --no-build'
             }
         }
 
-        stage('Skip non-main') {
+        stage('Build the app') {
             when {
-                not { branch 'main' }
+                branch 'main'
             }
             steps {
-                echo 'Skipping build/test because this is not main branch.'
+                sh 'dotnet build --no-restore --configuration Release'
+            }
+        }
+
+        stage('Run the tests') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh 'dotnet test --no-build --configuration Release --verbosity normal'
             }
         }
     }
